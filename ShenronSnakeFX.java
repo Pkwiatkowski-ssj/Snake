@@ -1,5 +1,5 @@
 // ShenronSnakeFX.java
-// Full Snake Game with Glow Effects, Gradient Balls, Background UI, and Start Menu
+// Enhanced Snake Game with Gradient Background, Animated Speed, and Improved Snake Look
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,7 +25,7 @@ class GamePanel extends JPanel implements ActionListener {
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = 25;
     static final int GAME_UNITS = (SCREEN_WIDTH * SCREEN_HEIGHT) / (UNIT_SIZE * UNIT_SIZE);
-    static final int DELAY = 120;
+    static int delay = 120; // Will decrease as snake eats
 
     final int[] x = new int[GAME_UNITS];
     final int[] y = new int[GAME_UNITS];
@@ -43,7 +43,6 @@ class GamePanel extends JPanel implements ActionListener {
     public GamePanel() {
         random = new Random();
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
-        this.setBackground(new Color(10, 10, 30));
         this.setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
     }
@@ -55,11 +54,12 @@ class GamePanel extends JPanel implements ActionListener {
         applesEaten = 0;
         bodyParts = 6;
         direction = 'R';
+        delay = 120;
         for (int i = 0; i < x.length; i++) {
             x[i] = 0;
             y[i] = 0;
         }
-        timer = new Timer(DELAY, this);
+        timer = new Timer(delay, this);
         timer.start();
     }
 
@@ -71,39 +71,48 @@ class GamePanel extends JPanel implements ActionListener {
     public void draw(Graphics2D g2d) {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+        // Gradient background
+        GradientPaint background = new GradientPaint(
+                0, 0, new Color(0, 0, 139), // Light blue (sky blue)
+                0, SCREEN_HEIGHT, Color.WHITE, // Blend into white
+                false);
+
+        g2d.setPaint(background);
+        g2d.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
         if (showMenu) {
             drawStartMenu(g2d);
             return;
         }
 
         if (running) {
-            // Draw gradient Dragon Ball
-            GradientPaint ballPaint = new GradientPaint(appleX, appleY, Color.ORANGE, appleX + UNIT_SIZE, appleY + UNIT_SIZE, Color.YELLOW, true);
+            // Gradient Dragon Ball
+            GradientPaint ballPaint = new GradientPaint(appleX, appleY, Color.ORANGE, appleX + UNIT_SIZE,
+                    appleY + UNIT_SIZE, Color.YELLOW, true);
             g2d.setPaint(ballPaint);
             g2d.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
             g2d.setColor(Color.RED);
             int starSize = UNIT_SIZE / 4;
-            g2d.fillOval(appleX + UNIT_SIZE / 2 - starSize / 2, appleY + UNIT_SIZE / 2 - starSize / 2, starSize, starSize);
+            g2d.fillOval(appleX + UNIT_SIZE / 2 - starSize / 2, appleY + UNIT_SIZE / 2 - starSize / 2, starSize,
+                    starSize);
 
-            // Draw Shenron-style Snake
+            // Draw better-looking Snake
             for (int i = 0; i < bodyParts; i++) {
-                if (i == 0) {
-                    g2d.setColor(new Color(0, 255, 0));
-                } else {
-                    g2d.setColor(new Color(255, 215, 0));
-                }
-                g2d.fillRoundRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE, 10, 10);
+                Color bodyColor = i == 0 ? new Color(0, 255, 0) : new Color(255, 215 - i * 5, 0);
+                g2d.setColor(bodyColor);
+                g2d.fillRoundRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE, 12, 12);
 
                 // Glow effect
-                g2d.setColor(new Color(255, 255, 255, 30));
-                g2d.drawRoundRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE, 10, 10);
+                g2d.setColor(new Color(255, 255, 255, 25));
+                g2d.drawRoundRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE, 12, 12);
             }
 
             // Score
             g2d.setColor(Color.CYAN);
             g2d.setFont(new Font("Consolas", Font.BOLD, 30));
             FontMetrics metrics = getFontMetrics(g2d.getFont());
-            g2d.drawString("Dragon Balls: " + applesEaten, (SCREEN_WIDTH - metrics.stringWidth("Dragon Balls: " + applesEaten)) / 2, 35);
+            g2d.drawString("Dragon Balls: " + applesEaten,
+                    (SCREEN_WIDTH - metrics.stringWidth("Dragon Balls: " + applesEaten)) / 2, 35);
         } else {
             drawGameOver(g2d);
         }
@@ -113,11 +122,13 @@ class GamePanel extends JPanel implements ActionListener {
         g2d.setColor(Color.GREEN);
         g2d.setFont(new Font("Consolas", Font.BOLD, 50));
         FontMetrics metrics = getFontMetrics(g2d.getFont());
-        g2d.drawString("Shenron Snake", (SCREEN_WIDTH - metrics.stringWidth("Shenron Snake")) / 2, SCREEN_HEIGHT / 2 - 50);
+        g2d.drawString("Shenron Snake", (SCREEN_WIDTH - metrics.stringWidth("Shenron Snake")) / 2,
+                SCREEN_HEIGHT / 2 - 50);
 
         g2d.setFont(new Font("Consolas", Font.PLAIN, 25));
         FontMetrics sub = getFontMetrics(g2d.getFont());
-        g2d.drawString("Press ENTER to Begin", (SCREEN_WIDTH - sub.stringWidth("Press ENTER to Begin")) / 2, SCREEN_HEIGHT / 2 + 10);
+        g2d.drawString("Press ENTER to Begin", (SCREEN_WIDTH - sub.stringWidth("Press ENTER to Begin")) / 2,
+                SCREEN_HEIGHT / 2 + 10);
     }
 
     public void drawGameOver(Graphics2D g2d) {
@@ -128,12 +139,13 @@ class GamePanel extends JPanel implements ActionListener {
 
         g2d.setFont(new Font("Consolas", Font.PLAIN, 30));
         FontMetrics metrics3 = getFontMetrics(g2d.getFont());
-        g2d.drawString("Press any key to play again", (SCREEN_WIDTH - metrics3.stringWidth("Press any key to play again")) / 2, SCREEN_HEIGHT / 2 + 50);
+        g2d.drawString("Press any key to play again",
+                (SCREEN_WIDTH - metrics3.stringWidth("Press any key to play again")) / 2, SCREEN_HEIGHT / 2 + 50);
     }
 
     public void newApple() {
-        appleX = random.nextInt((int)(SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
-        appleY = random.nextInt((int)(SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
+        appleX = random.nextInt((int) (SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
+        appleY = random.nextInt((int) (SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
     }
 
     public void move() {
@@ -143,10 +155,18 @@ class GamePanel extends JPanel implements ActionListener {
         }
 
         switch (direction) {
-            case 'U': y[0] -= UNIT_SIZE; break;
-            case 'D': y[0] += UNIT_SIZE; break;
-            case 'L': x[0] -= UNIT_SIZE; break;
-            case 'R': x[0] += UNIT_SIZE; break;
+            case 'U':
+                y[0] -= UNIT_SIZE;
+                break;
+            case 'D':
+                y[0] += UNIT_SIZE;
+                break;
+            case 'L':
+                x[0] -= UNIT_SIZE;
+                break;
+            case 'R':
+                x[0] += UNIT_SIZE;
+                break;
         }
     }
 
@@ -155,6 +175,10 @@ class GamePanel extends JPanel implements ActionListener {
             bodyParts++;
             applesEaten++;
             newApple();
+
+            // Speed up!
+            delay = Math.max(40, delay - 5);
+            timer.setDelay(delay);
         }
     }
 
@@ -196,16 +220,20 @@ class GamePanel extends JPanel implements ActionListener {
             if (running) {
                 switch (e.getKeyCode()) {
                     case KeyEvent.VK_LEFT:
-                        if (direction != 'R') direction = 'L';
+                        if (direction != 'R')
+                            direction = 'L';
                         break;
                     case KeyEvent.VK_RIGHT:
-                        if (direction != 'L') direction = 'R';
+                        if (direction != 'L')
+                            direction = 'R';
                         break;
                     case KeyEvent.VK_UP:
-                        if (direction != 'D') direction = 'U';
+                        if (direction != 'D')
+                            direction = 'U';
                         break;
                     case KeyEvent.VK_DOWN:
-                        if (direction != 'U') direction = 'D';
+                        if (direction != 'U')
+                            direction = 'D';
                         break;
                 }
             } else {
