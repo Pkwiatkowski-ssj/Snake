@@ -1,5 +1,5 @@
-// ShenronSnakeFX.java – Final Cleaned & Working Version
-// Fixes: main() properly placed, Particle & Orb un-nested, brackets fixed
+// ShenronSnakeFX.java – Final Version with Hardcore Mode (No Shenron Wishes)
+// Hardcore mode: Super fast + no wishes
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,6 +29,7 @@ public class ShenronSnakeFX extends JPanel implements ActionListener {
     boolean showShenron = false;
     boolean wishPending = false;
     boolean zenMode = false;
+    boolean hardcoreMode = false;
 
     Random random = new Random();
     List<Particle> particles = new ArrayList<>();
@@ -51,6 +52,8 @@ public class ShenronSnakeFX extends JPanel implements ActionListener {
         Arrays.fill(y, 0);
         newApple();
         running = true;
+        showShenron = false;
+        wishPending = false;
         timer.setDelay(delay);
         timer.start();
     }
@@ -87,7 +90,7 @@ public class ShenronSnakeFX extends JPanel implements ActionListener {
             applesEaten++;
             newApple();
             spawnParticles();
-            if (applesEaten % 7 == 0 && applesEaten != 0) {
+            if (!hardcoreMode && applesEaten % 7 == 0 && applesEaten != 0) {
                 showShenron = true;
                 running = false;
                 wishPending = true;
@@ -205,13 +208,11 @@ public class ShenronSnakeFX extends JPanel implements ActionListener {
                 delay = 300;
                 timer.setDelay(delay);
                 new java.util.Timer().schedule(new java.util.TimerTask() {
-                    @Override
-                    public void run() {
+                    @Override public void run() {
                         for (int i = 0; i <= 10; i++) {
                             int newDelay = 300 - (i * 20);
                             new java.util.Timer().schedule(new java.util.TimerTask() {
-                                @Override
-                                public void run() {
+                                @Override public void run() {
                                     delay = newDelay;
                                     timer.setDelay(delay);
                                 }
@@ -237,14 +238,12 @@ public class ShenronSnakeFX extends JPanel implements ActionListener {
         timer.start();
     }
 
-    @Override
-    public void paintComponent(Graphics g) {
+    @Override public void paintComponent(Graphics g) {
         super.paintComponent(g);
         draw(g);
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
+    @Override public void actionPerformed(ActionEvent e) {
         if (running) {
             move(); checkApple(); checkCollisions(); updateParticles();
         }
@@ -252,13 +251,12 @@ public class ShenronSnakeFX extends JPanel implements ActionListener {
     }
 
     public class MyKeyAdapter extends KeyAdapter {
-        @Override
-        public void keyPressed(KeyEvent e) {
+        @Override public void keyPressed(KeyEvent e) {
             if (showMenu) {
-                if (e.getKeyCode() == KeyEvent.VK_1) { delay = 120; zenMode = false; showMenu = false; startGame(); }
-                else if (e.getKeyCode() == KeyEvent.VK_2) { delay = 120; zenMode = true; showMenu = false; startGame(); }
-                else if (e.getKeyCode() == KeyEvent.VK_3) { delay = 60; zenMode = false; showMenu = false; startGame(); }
-            } else if (wishPending && showShenron) {
+                if (e.getKeyCode() == KeyEvent.VK_1) { delay = 120; zenMode = false; hardcoreMode = false; showMenu = false; startGame(); }
+                else if (e.getKeyCode() == KeyEvent.VK_2) { delay = 120; zenMode = true; hardcoreMode = false; showMenu = false; startGame(); }
+                else if (e.getKeyCode() == KeyEvent.VK_3) { delay = 40; zenMode = false; hardcoreMode = true; showMenu = false; startGame(); }
+            } else if (wishPending && showShenron && !hardcoreMode) {
                 if (e.getKeyCode() == KeyEvent.VK_1) applyWish(1);
                 else if (e.getKeyCode() == KeyEvent.VK_2) applyWish(2);
                 else if (e.getKeyCode() == KeyEvent.VK_3) applyWish(3);
